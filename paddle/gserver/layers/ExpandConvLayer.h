@@ -16,6 +16,7 @@ limitations under the License. */
 
 #include <vector>
 #include "ConvBaseLayer.h"
+#include "ACLOperator.hpp"
 #include "paddle/math/Matrix.h"
 
 namespace paddle {
@@ -28,9 +29,9 @@ namespace paddle {
  * The config file api is img_conv_layer.
  */
 
-class ExpandConvLayer : public ConvBaseLayer {
+class ExpandConvLayer : public ACLOperator, public ConvBaseLayer {
 public:
-  explicit ExpandConvLayer(const LayerConfig& config) : ConvBaseLayer(config) {}
+  explicit ExpandConvLayer(const LayerConfig& config) : ACLOperator(config), ConvBaseLayer(config) {}
 
   ~ExpandConvLayer() {}
 
