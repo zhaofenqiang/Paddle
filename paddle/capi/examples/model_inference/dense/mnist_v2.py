@@ -21,7 +21,7 @@ from PIL import Image
 import numpy as np
 
 import paddle.v2 as paddle
-from paddle.utils.dump_v2_config import dump_v2_config
+from dump_v2_config import dump_v2_config
 
 logger = logging.getLogger("paddle")
 logger.setLevel(logging.INFO)
