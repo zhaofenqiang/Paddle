@@ -174,9 +174,9 @@ void ExpandConvLayer::forward(PassType passType) {
 	arm_compute::TensorShape biases_shape ((unsigned int)numFilters_);
 	arm_compute::TensorShape output_shape((unsigned int)outputW_[i], (unsigned int)outputH_[i],(unsigned int)numFilters_,(unsigned int)batchSize);
 
-    real* inputData = (*getInputValue(i)).getData();
-    real* filterData = (*weights_[i]->getW()).getData();
-    real* outputData =(*getOutputValue()).getData();
+    real* inputData = getInputValue(i)->getData();
+    real* filterData = weights_[i]->getW()->getData();
+    real* outputData = getOutputValue()->getData();
 
     //[kernel_x, kernel_y, IFM, OFM]
     new_tensor(weights(), weights_shape, filterData);
@@ -188,11 +188,9 @@ void ExpandConvLayer::forward(PassType passType) {
     new_tensor(input(), input_shape, inputData);
  //[width, height, OFM]
     new_tensor(output(),output_shape,outputData);
-
     acl_configure(conv, this, conv_info);
 
-    paddle::acl_run(this, inputData, outputData);
-
+    this->acl_run(inputData, outputData);
 
   }
   /* activation */

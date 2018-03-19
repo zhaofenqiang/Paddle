@@ -1,5 +1,4 @@
-#ifndef PADDLE_ACL_LAYER_HPP_
-#define PADDLE_ACL_LAYER_HPP_
+#pragma once
 
 #include "arm_compute/runtime/NEON/functions/NEDepthConcatenateLayer.h"
 #include "arm_compute/runtime/NEON/functions/NEConvolutionLayer.h"
@@ -26,7 +25,9 @@
 #include "arm_compute/runtime/CL/functions/CLBatchNormalizationLayer.h"
 #include "arm_compute/runtime/CL/CLTensor.h"
 #include "arm_compute/runtime/CL/CLScheduler.h"
-#include "ACLTensor.hpp"
+#include "ACLBaseBaseTensor.hpp"
+#include "paddle/utils/Common.h"
+#include "ModelConfig.pb.h"
 
 #define FLAGS_ENABLE_ACL_ABSVAL    0x00000001
 #define FLAGS_ENABLE_ACL_BNLL      0x00000002
@@ -41,8 +42,8 @@
 #define FLAGS_ENABLE_ACL_LC        0x00000400
 #define FLAGS_ENABLE_ACL_BN        0x00000800
 #define FLAGS_ENABLE_ACL_CONCAT    0x00001000
-extern unsigned int bypass_acl_class_layer;
-extern unsigned int openailab_intfp;
+//extern unsigned int bypass_acl_class_layer;
+//extern unsigned int openailab_intfp;
 
 namespace paddle {
 enum TensorType{
@@ -73,57 +74,7 @@ enum OperateType{
     operate_type_softmax,
     operate_type_concat,
 };
-class BaseACLTensor{
-public:
-    BaseACLTensor()
-         :type_(tensor_input),allocate_(false){
-    }
-    virtual void bindmem(void *mem){
-        mem_=mem;
-    }
-    virtual void settensortype(TensorType type){
-        type_=type;
-    };
-    virtual void map(bool blocking = true){
-    }
-    virtual void unmap(){}
-    virtual void commit(TensorType type=tensor_data){}
-    int tensor_copy(arm_compute::ITensor* tensor,void * mem, bool toTensor=true);
-protected:
-    void* mem_;
-    TensorType type_;
-    bool allocate_;
-};
-class ACLTensor:public BaseACLTensor,public Tensor{
-public:
-    ACLTensor(arm_compute::TensorInfo &&info)
-       :Tensor(info){
-    }
-    virtual void map(bool blocking = true){
-        if (!allocate_){
-            Tensor::allocate();
-            allocate_=true;
-        }
-        Tensor::map(blocking);
-    }
-    virtual int tensor_copy(void * mem, bool toTensor=true){
-        auto acl_tensor=this;
-        arm_compute::ITensor* tensor=acl_tensor->tensor();
-        BaseACLTensor::tensor_copy(tensor,mem,toTensor);
-        return 0;
-    }
-    virtual void unmap(){Tensor::unmap();}
-    virtual void commit(TensorType type=tensor_data);
-};
-class ACLSubTensor:public BaseACLTensor,public SubTensor{
-public:
-    ACLSubTensor(std::unique_ptr<ACLTensor> &parent,arm_compute::TensorShape &shape,arm_compute::Coordinates& coord)
-       :SubTensor(parent.get(),shape,coord){
-    }
-    virtual int tensor_copy(void * mem, bool toTensor=true){
-        return 0;
-    }
-};
+
 
 template <typename T>
 class TensorPair{
@@ -133,6 +84,7 @@ public:
     TensorType type;
     std::unique_ptr<T> tensor;
 };
+
 template <typename T>
 std::unique_ptr<T> &tensor_item(std::vector<std::unique_ptr<TensorPair<T>>>& pool,TensorType type,int idx){
     int count=0;
@@ -150,6 +102,64 @@ std::unique_ptr<T> &tensor_item(std::vector<std::unique_ptr<TensorPair<T>>>& poo
     item->tensor=NULL;
     return item->tensor;
 }
+
+
+class BaseACLTensor{
+public:
+    BaseACLTensor()
+         :type_(tensor_input),allocate_(false){
+    }
+    virtual ~BaseACLTensor(){}
+    virtual void bindmem(void *mem){
+        mem_=mem;
+    }
+    virtual void settensortype(TensorType type){
+        type_=type;
+    };
+    virtual void map(bool blocking = true){
+    }
+    virtual void unmap(){}
+    virtual void commit(TensorType type=tensor_data){}
+    int tensor_copy(arm_compute::ITensor* tensor,void * mem, bool toTensor=true);
+protected:
+    void* mem_;
+    TensorType type_;
+    bool allocate_;
+};
+
+class ACLTensor:public BaseACLTensor,public BaseBaseTensor{
+public:
+    ACLTensor(arm_compute::TensorInfo &&info)
+       :BaseBaseTensor(info){
+    }
+    virtual void map(bool blocking = true){
+        if (!allocate_){
+            BaseBaseTensor::allocate();
+            allocate_=true;
+        }
+        BaseBaseTensor::map(blocking);
+    }
+    virtual int tensor_copy(void * mem, bool toTensor=true){
+        auto acl_tensor=this;
+        arm_compute::ITensor* tensor=acl_tensor->tensor();
+        BaseACLTensor::tensor_copy(tensor,mem,toTensor);
+        return 0;
+    }
+    virtual void unmap(){BaseBaseTensor::unmap();}
+    virtual void commit(TensorType type=tensor_data);
+};
+
+class ACLSubTensor:public BaseACLTensor,public SubTensor{
+public:
+    ACLSubTensor(std::unique_ptr<ACLTensor> &parent,arm_compute::TensorShape &shape,arm_compute::Coordinates& coord)
+       :SubTensor(parent.get(),shape,coord){
+    }
+    virtual int tensor_copy(void * mem, bool toTensor=true){
+        return 0;
+    }
+};
+
+
 class ACLOperator {
 public:
     virtual void commit(){
@@ -204,8 +214,68 @@ public:
     }
 
 
-    explicit ACLOperator(const LayerParameter& param);
-    virtual ~ACLOperator();
+    explicit ACLOperator(const LayerConfig& param):operator_state_(operator_not_init),force_bypass_acl_path_(false),
+    	    target_hint_(TargetHint::NEON),
+    	    convolution_method_hint_(ConvolutionMethodHint::GEMM),
+    	    _group(1),name_(""), type_(OperateType::operate_type_conv){
+    	//  const char* pBypassACL;
+    	  if(init_cl_env){
+    	#ifdef USE_OPENCL
+    	     try {
+    	        if (opencl_is_available()) {
+    	          arm_compute::CLScheduler::get().default_init();
+    	          support_opencl_=true;
+    	        }
+    	     }catch(std::exception& e){
+    	          support_opencl_=false;
+    	     }
+    	#endif
+    	     init_cl_env=false;
+    	  }
+    	//  pBypassACL = getenv ("BYPASSACL");
+    	//  if (pBypassACL){
+    	//    unsigned int bacl;
+    	//    sscanf(pBypassACL,"%i", &bacl);
+    	//	if(bacl != bypass_acl_class_layer){
+    	//	    bypass_acl_class_layer = bacl;
+    	//        printf("BYPASSACL<%s>\n", pBypassACL);
+    	//        printf("BYPASSACL: %x\n", bypass_acl_class_layer);
+    	//	}
+    	//  }
+
+    	//  const string& layer_type = param.type();
+    	//  if (layer_type=="Convolution") {
+    	//      ConvolutionParameter conv_param = param.convolution_param();
+    	//        const char* pDirectConv;
+    	//        unsigned int use_direct_conv=0;
+    	//        pDirectConv = getenv ("DIRECTCONV");
+    	//        if (pDirectConv){
+    	//          unsigned int bdirectconv;
+    	//          sscanf(pDirectConv,"%i", &bdirectconv);
+    	//          if(bdirectconv != use_direct_conv){
+    	//              use_direct_conv = bdirectconv;
+    	//              printf("DIRECTCONV<%s>\n", pDirectConv);
+    	//              printf("DIRECTCONV: %x\n", use_direct_conv);
+    	//          }
+    	//        }
+    	//        int pad_data[3];
+    	//        if (conv_param.has_pad_h() || conv_param.has_pad_w()) {
+    	//          pad_data[0] = conv_param.pad_h();
+    	//          pad_data[1] = conv_param.pad_w();
+    	//        } else {
+    	//          const int kDefaultPad = 0;
+    	//          const int num_pad_dims = conv_param.pad_size();
+    	//          for (int i = 0; i < 2; ++i) {
+    	//            pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
+    	//                conv_param.pad((num_pad_dims == 1) ? 0 : i);
+    	//          }
+    	//        }
+    	//        if (use_direct_conv && ( (conv_param.kernel_size(0)==1 &&pad_data[0]==0 && pad_data[1]==0) || (conv_param.kernel_size(0)==3 && pad_data[0]<=1 && pad_data[1] <=1 ) )) {
+    	//            convolution_method_hint_=ConvolutionMethodHint::DIRECT; //NEDirectConvolutionLayer only for 1x1 and 3x3
+    	//        }
+    	 }
+
+    virtual ~ACLOperator(){};
     inline TargetHint getTargetHint(){
 #ifdef USE_OPENCL
         if (target_hint_==TargetHint::DONT_CARE) {
@@ -302,8 +372,6 @@ protected:
     const char* name_;
     OperateType type_;
 };
-
-int isScheduleEnable();
 
 template <typename OperatorType, typename TensorType>
 std::unique_ptr<arm_compute::IFunction> instantiate_function(arm_compute::ITensor *input, arm_compute::ITensor *output){
@@ -455,8 +523,6 @@ std::unique_ptr<arm_compute::IFunction> instantiate_op_func(std::unique_ptr<ACLT
     return func;
 }
 
-
-
 template <typename Dtype,typename OperatorType, typename TensorType>
 std::unique_ptr<arm_compute::IFunction> instantiate_function(arm_compute::ITensor *input, arm_compute::ITensor *output,
                arm_compute::ITensor *mean,arm_compute::ITensor *var,arm_compute::ITensor *beta,arm_compute::ITensor *gamma,Dtype & eps){
@@ -594,61 +660,18 @@ bool instantiate_op_bn(ACLOperator* acl_op,std::vector<std::unique_ptr<arm_compu
     func.push_back(instantiate_op_func<Dtype,arm_compute::CLBatchNormalizationLayer,arm_compute::ICLTensor,arm_compute::NEBatchNormalizationLayer,arm_compute::ITensor>(input, output, mean,var,beta,gamma,eps, hint));
     return true;
 }
+
 inline bool instantiate_op_softmax(ACLOperator* acl_op,std::vector<std::unique_ptr<arm_compute::IFunction>> & func,std::unique_ptr<ACLTensor> & input,std::unique_ptr<ACLTensor> & output,TargetHint  hint,void *data){
     func.push_back(instantiate_op_func<arm_compute::CLSoftmaxLayer,arm_compute::ICLTensor,arm_compute::NESoftmaxLayer,arm_compute::ITensor>(input, output, hint));
     return true;
 }
+
 inline bool instantiate_op_concat(ACLOperator* acl_op,std::vector<std::unique_ptr<arm_compute::IFunction>> & func,std::unique_ptr<ACLTensor> & input,std::unique_ptr<ACLTensor> & output,TargetHint  hint,int num){
     func.push_back(instantiate_op_func_lists<arm_compute::CLDepthConcatenateLayer,arm_compute::ICLTensor,arm_compute::NEDepthConcatenateLayer,arm_compute::ITensor>(acl_op, output, num,hint));
     return true;
 }
-template <typename Dtype>
-Dtype* GetDataPtr(ACLOperator* op,Blob<Dtype>* const &blob,bool isconst=false){
-    if (!isconst) {
-        if (op->getTargetHint() == TargetHint::NEON) {
-            return blob->mutable_cpu_data();
-        }
-        return blob->mutable_gpu_data();
-    }
-    if (op->getTargetHint()==TargetHint::NEON) {
-        return (Dtype*)blob->cpu_data();
-    }
-    return (Dtype*)blob->gpu_data();
-}
 
-template <typename Dtype>
-Dtype* InputdataPtr(ACLOperator* op,const vector<Blob<Dtype>*>& bottom,int index=-1){
-    if (index==-1) index=0;
-    return GetDataPtr(op, bottom[index], true);
 }
-template <typename Dtype>
-Dtype* OutputdataPtr(ACLOperator* op,const vector<Blob<Dtype>*>& top){
-    return GetDataPtr(op,top[0]);
-}
-
-void acl_run(ACLOperator* op, real* input, real* output, bool multi_input_run=true){
-    if (multi_input_run) {
-		op->acl_run((void*)input, (void*)output);
-        return ;
-    }
-//    for (int i = 0; i < bottom.size(); ++i) {
-//        op->tensor_mem(op->cinput(i),InputdataPtr(op,bottom,i));
-//    }
-//    op->acl_run(NULL,OutputdataPtr(op,top));
-}
-}
-
-#define INIT_GLOBAL_FUNCS_TYPE(Dtype) \
-template <> \
-Dtype* InputdataPtr(ACLOperator* op,const vector<Blob<Dtype>*>& bottom,int index); \
-template <> \
-Dtype* OutputdataPtr(ACLOperator* op,const vector<Blob<Dtype>*>& top); \
-template <> \
-Dtype* GetDataPtr(ACLOperator* op,Blob<Dtype>* const & blob,bool isconst); \
-
-#define INIT_GLOBAL_FUNCS() \
-INIT_GLOBAL_FUNCS_TYPE(double); \
-INIT_GLOBAL_FUNCS_TYPE(float); \
 
 
 #ifdef USE_PROFILING 
@@ -665,7 +688,3 @@ INIT_GLOBAL_FUNCS_TYPE(float); \
             instantiate_op_##opname(acl_op,acl_op->funcs(),acl_op->input(),acl_op->output(),acl_op->getTargetHint(),args);\
 }
 #endif 
-
-#endif
-
-

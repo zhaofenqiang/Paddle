@@ -34,3 +34,7 @@ paddle/.timestamp
 python/paddlepaddle.egg-info/
 paddle/fluid/pybind/pybind.h
 python/paddle/version.py
+paddle/capi/examples/model_inference/dense/models/
+paddle/capi/examples/model_inference/vgg16/models/
+paddle/capi/examples/model_inference/ssd/model/
+

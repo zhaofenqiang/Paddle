@@ -71,9 +71,8 @@ endif()
 
 if(ANDROID OR IOS)
     if(ANDROID)
-        if(${CMAKE_SYSTEM_VERSION} VERSION_LESS "16")
-            message(FATAL_ERROR "Unsupport standalone toolchains with Android API level lower than 16")
-        endif()
+    	message("CMAKE_SYSTEM_VERSION: ${CMAKE_SYSTEM_VERSION}")
+        message("Unsupport standalone toolchains with Android API level lower than 16")
     endif()
 
     set(WITH_GPU OFF CACHE STRING
@@ -160,7 +159,7 @@ include(flags)              # set paddle compile flags
 include(version)            # set PADDLE_VERSION
 include(coveralls)          # set code coverage
 include(inference_lib)      # add paddle fluid inference libraries
-
+include(acl)
 
 include_directories("${PADDLE_SOURCE_DIR}")
 include_directories("${PADDLE_SOURCE_DIR}/paddle/cuda/include")
@@ -221,3 +220,4 @@ endif()
 if(WITH_DOC)
     add_subdirectory(doc)
 endif()
+

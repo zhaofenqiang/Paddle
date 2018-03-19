@@ -15,6 +15,7 @@ limitations under the License. */
 #pragma once
 
 #include <vector>
+#include "ACLOperator.hpp"
 #include "PoolLayer.h"
 #include "PoolProjection.h"
 #include "paddle/math/Matrix.h"
@@ -23,7 +24,7 @@ namespace paddle {
 /**
  * @brief Basic parent layer of different kinds of pooling
  */
-class PoolProjectionLayer : public PoolLayer {
+class PoolProjectionLayer : public ACLOperator, public PoolLayer {
 protected:
   size_t imgSizeH_, imgSizeW_;
   size_t outputH_, outputW_;
@@ -31,7 +32,7 @@ protected:
   ProjectionConfig projectionConfig_;
 
 public:
-  explicit PoolProjectionLayer(const LayerConfig& config) : PoolLayer(config) {
+  explicit PoolProjectionLayer(const LayerConfig& config) : ACLOperator(config), PoolLayer(config) {
     PoolConfig* conf = projectionConfig_.mutable_pool_conf();
     *conf = config_.inputs(0).pool_conf();
     poolProjection_.reset(

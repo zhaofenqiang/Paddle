@@ -52,7 +52,26 @@ void PoolProjectionLayer::forward(PassType passType) {
   int batchSize = in.value->getHeight();
   int size = getSize();
   resetOutput(batchSize, size);
-  poolProjection_->forward(&in, &output_, passType);
+
+  //call acl function
+  arm_compute::TensorShape in_shape ((unsigned int)imgSize_, (unsigned int)imgSizeY_,(unsigned int)channels_);
+  arm_compute::TensorShape out_shape((unsigned int)outputX_, (unsigned int)outputY_,(unsigned int)channels_);
+  // Initialize ACL.
+  arm_compute::PoolingLayerInfo pool_info;
+  if(poolType_ == "max-projection")
+     pool_info=arm_compute::PoolingLayerInfo(arm_compute::PoolingType::MAX, stride_, arm_compute::PadStrideInfo(stride_, strideY_, confPadding_, confPaddingY_, arm_compute::DimensionRoundingType::CEIL));
+  else
+     pool_info=arm_compute::PoolingLayerInfo(arm_compute::PoolingType::AVG, stride_, arm_compute::PadStrideInfo(stride_, strideY_, confPadding_, confPaddingY_, arm_compute::DimensionRoundingType::CEIL));
+
+  real* inputData = in.value->getData();
+  real* outputData =  output_.value->getData();
+
+  new_tensor(input(),in_shape,  inputData);
+  new_tensor(output(),out_shape, outputData);
+  acl_configure(pooling, this, pool_info);
+
+  acl_run(inputData, outputData);
+
 }
 
 void PoolProjectionLayer::backward(const UpdateCallback& callback) {
