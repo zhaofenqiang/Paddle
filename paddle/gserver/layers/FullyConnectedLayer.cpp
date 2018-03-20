@@ -69,34 +69,46 @@ void FullyConnectedLayer::prefetch() {
 void FullyConnectedLayer::forward(PassType passType) {
   Layer::forward(passType);
 
-  /* malloc memory for the output_ if necessary */
   int batchSize = getInput(0).getBatchSize();
+  /* malloc memory for the output_ if necessary */
   int size = getSize();
-
   {
     REGISTER_TIMER_INFO("FwResetTimer", getName().c_str());
     reserveOutput(batchSize, size);
   }
 
+  //consider only 1 input
+  //TODO: more inputs, inputLayers_.size() != 1
+  int K = getInputValue(0)->getWidth();
+  int N = getOutputValue()->getWidth();
+
+  arm_compute::TensorShape weights_shape((unsigned int)N, (unsigned int)K);
+  arm_compute::TensorShape biases_shape((unsigned int)N);
+  arm_compute::TensorShape input_shape((unsigned int)K, (unsigned int)batchSize);
+  arm_compute::TensorShape output_shape((unsigned int)N, (unsigned int)batchSize);
+
   MatrixPtr outV = getOutputValue();
+  auto input_ = getInput(0);
+  CHECK(input_.value) << "The input of 'fc' layer must be matrix";
 
-  for (size_t i = 0; i != inputLayers_.size(); ++i) {
-    auto input = getInput(i);
-    CHECK(input.value) << "The input of 'fc' layer must be matrix";
-    REGISTER_TIMER_INFO("FwMulTimer", getName().c_str());
-    i == 0 ? outV->mul(*input.value, *weights_[i]->getW(), 1, 0)
-           : outV->mul(*input.value, *weights_[i]->getW(), 1, 1);
-  }
+  real* inputData = getInputValue(0)->getData();
+  real* weightData = weights_[0]->getW()->getData();
+  real* outputData = outV->getData();
 
-  /* add the bias-vector */
-  if (biases_.get() != NULL) {
-    REGISTER_TIMER_INFO("FwBiasTimer", getName().c_str());
-    outV->addBias(*(biases_->getW()), 1);
+  new_tensor(weights(), weights_shape, weightData);
+  if (biases_.get()) {
+    new_tensor(biases(),biases_shape, biases_->getW()->getData());
   }
+  new_tensor(input(), input_shape, inputData);
+  new_tensor(output(), output_shape, weightData);
+
+  bool transpose = false;
+  acl_configure(fc, this, transpose);
+  acl_run(inputData, outputData);
 
   /* activation */ {
-    REGISTER_TIMER_INFO("FwAtvTimer", getName().c_str());
-    forwardActivation();
+  REGISTER_TIMER_INFO("FwAtvTimer", getName().c_str());
+  forwardActivation();
   }
 }
 

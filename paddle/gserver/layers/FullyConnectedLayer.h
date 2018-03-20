@@ -14,6 +14,7 @@ limitations under the License. */
 
 #pragma once
 
+#include "ACLOperator.hpp"
 #include "Layer.h"
 #include "paddle/math/Matrix.h"
 #include "paddle/utils/ThreadLocal.h"
@@ -27,13 +28,13 @@ namespace paddle {
  * The config file api is fc_layer.
  */
 
-class FullyConnectedLayer : public Layer {
+class FullyConnectedLayer : public ACLOperator, public Layer {
 protected:
   WeightList weights_;
   std::unique_ptr<Weight> biases_;
 
 public:
-  explicit FullyConnectedLayer(const LayerConfig& config) : Layer(config) {}
+  explicit FullyConnectedLayer(const LayerConfig& config) : ACLOperator(config), Layer(config) {}
   ~FullyConnectedLayer() {}
 
   bool init(const LayerMap& layerMap,

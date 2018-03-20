@@ -118,7 +118,15 @@ MatrixPtr sftMaxDot_;
 
 public:
 Error __must_check forward(Argument& act) {
-  act.value->softmax(*act.value);
+  unsigned int channels = act.value->getWidth();
+  arm_compute::TensorShape shape(channels);
+
+  // Initialize ACL.
+  new_tensor(input(), shape, act.value->getData());
+  new_tensor(output(), shape, act.value->getData());
+  acl_configure(softmax, this, NULL);
+  acl_run(act.value->getData(), act.value->getData()); // option: (void*)Data ???
+
   return Error();
 }
 
@@ -255,7 +263,18 @@ END_DEFINE_ACTIVATION(softsign)
  */
 BEGIN_DEFINE_ACTIVATION(relu)
 Error __must_check forward(Argument& act) {
-  act.value->relu(*act.value);
+  const unsigned int count  = act.value->getWidth();
+  arm_compute::TensorShape input_shape(count);
+  arm_compute::TensorShape output_shape(count);
+
+  // Initialize ACL.
+  arm_compute::ActivationLayerInfo act_info(arm_compute::ActivationLayerInfo::ActivationFunction::RELU);
+
+  new_tensor(input(), input_shape, act.value->getData());
+  new_tensor(output(), output_shape, act.value->getData());
+  acl_configure(activation, this, act_info);
+  acl_run(act.value->getData(), act.value->getData());
+
   return Error();
 }
 

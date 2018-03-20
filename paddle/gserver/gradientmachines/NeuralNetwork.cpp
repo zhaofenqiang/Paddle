@@ -19,6 +19,7 @@ limitations under the License. */
 #include "paddle/utils/CustomStackTrace.h"
 #include "paddle/utils/Logging.h"
 #include "paddle/utils/Stat.h"
+#include <iostream>
 
 #ifdef PADDLE_WITH_MKLDNN
 #include "paddle/gserver/layers/MKLDNNLayer.h"
@@ -285,6 +286,7 @@ void NeuralNetwork::forward(const std::vector<Argument>& inArgs,
       REGISTER_TIMER_INFO("ForwardTimer", layer->getName().c_str());
       gLayerStackTrace.push(layer->getName());
       layer->forward(passType);
+      std::cout << layer->getName() << std::endl;
       gLayerStackTrace.pop(layer->getName());
     }
   }

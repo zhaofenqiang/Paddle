@@ -181,7 +181,7 @@ void ExpandConvLayer::forward(PassType passType) {
     //[kernel_x, kernel_y, IFM, OFM]
     new_tensor(weights(), weights_shape, filterData);
     if (biases_.get()) {
-    	real* biasData = (*biases_->getW()).getData();
+    	real* biasData = biases_->getW()->getData();
         new_tensor(biases(), biases_shape, biasData);
     }
  //[width, height, IFM]

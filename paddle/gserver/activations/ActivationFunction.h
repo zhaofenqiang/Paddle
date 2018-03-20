@@ -14,6 +14,7 @@ limitations under the License. */
 
 #pragma once
 #include <string>
+#include "paddle/gserver/layers/ACLOperator.hpp"
 #include <vector>
 #include "paddle/utils/Error.h"
 
@@ -30,12 +31,12 @@ struct Argument;
  * softrelu, abs, square, exponential.
  *
  */
-class ActivationFunction {
+class ActivationFunction : public ACLOperator{
 public:
   static ActivationFunction* create(const std::string& type);
   static std::vector<std::string> getAllRegisteredTypes();
 
-  ActivationFunction() {}
+  ActivationFunction() : ACLOperator() {}
 
   virtual ~ActivationFunction() {}
 

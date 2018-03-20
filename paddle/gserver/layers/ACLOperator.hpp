@@ -213,6 +213,7 @@ public:
         return input();
     }
 
+    ACLOperator() {}
 
     explicit ACLOperator(const LayerConfig& param):operator_state_(operator_not_init),force_bypass_acl_path_(false),
     	    target_hint_(TargetHint::NEON),
