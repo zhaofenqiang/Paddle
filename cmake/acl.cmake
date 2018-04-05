@@ -1,2 +1,2 @@
-include_directories("/usr/local/AID/ComputeLibrary/include" "/usr/local/AID/ComputeLibrary")
-link_directories("/usr/local/AID/ComputeLibrary/lib")
+include_directories("ComputeLibrary/include" "ComputeLibrary")
+link_directories("ComputeLibrary/lib")

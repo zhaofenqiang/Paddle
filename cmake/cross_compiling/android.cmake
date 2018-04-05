@@ -83,8 +83,10 @@ IF("${CMAKE_VERSION}" VERSION_LESS "3.7.0")
     IF("${CMAKE_VERSION}" VERSION_LESS "3.1.0")
         SET(CMAKE_SYSTEM_NAME "Linux")
     ENDIF()
-    MESSAGE(WARNING "It is recommended to use CMake >= 3.7.0 (current version: "
-            "${CMAKE_VERSION}), when cross-compiling for Android.")
+    
+    # zfq @1018.3.30: avoid cmake version, lazy to update cmake in docker.
+    #MESSAGE(WARNING "It is recommended to use CMake >= 3.7.0 (current version: "
+    #"${CMAKE_VERSION}), when cross-compiling for Android.")
 
     IF(ANDROID_STANDALONE_TOOLCHAIN)
         # Use standalone toolchain
