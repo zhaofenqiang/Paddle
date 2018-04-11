@@ -285,8 +285,8 @@ void NeuralNetwork::forward(const std::vector<Argument>& inArgs,
     for (auto& layer : layers_) {
       REGISTER_TIMER_INFO("ForwardTimer", layer->getName().c_str());
       gLayerStackTrace.push(layer->getName());
-      layer->forward(passType);
       std::cout << layer->getName() << std::endl;
+      layer->forward(passType);
       gLayerStackTrace.pop(layer->getName());
     }
   }

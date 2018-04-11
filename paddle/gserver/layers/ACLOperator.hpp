@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include "arm_compute/runtime/NEON/functions/NEDepthConcatenateLayer.h"
 #include "arm_compute/runtime/NEON/functions/NEConvolutionLayer.h"
 #include "arm_compute/runtime/NEON/functions/NEDirectConvolutionLayer.h"
@@ -313,6 +314,7 @@ public:
         if(input_data){
         	tensor_mem(input(),input_data);
         }
+        std::cout << "running on acl..." << std::endl;
         run();
         tensor_mem(output_data, output());
     }

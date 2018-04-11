@@ -38,3 +38,7 @@ paddle/capi/examples/model_inference/dense/models/
 paddle/capi/examples/model_inference/vgg16/models/
 paddle/capi/examples/model_inference/ssd/model/
 
+build_android/
+ComputeLibrary/
+install_android/
+

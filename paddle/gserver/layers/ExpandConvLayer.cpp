@@ -15,6 +15,7 @@ limitations under the License. */
 #include "ExpandConvLayer.h"
 #include "paddle/utils/Logging.h"
 #include "paddle/utils/Stat.h"
+#include <iostream>
 
 DEFINE_bool(use_nnpack,
             false,
@@ -190,6 +191,7 @@ void ExpandConvLayer::forward(PassType passType) {
     new_tensor(output(),output_shape,outputData);
     acl_configure(conv, this, conv_info);
 
+	std::cout << "running ExpandConvLayer forward..." << std::endl;
     this->acl_run(inputData, outputData);
 
   }

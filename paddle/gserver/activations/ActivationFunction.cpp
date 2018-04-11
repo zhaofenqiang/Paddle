@@ -120,7 +120,7 @@ public:
 Error __must_check forward(Argument& act) {
   unsigned int channels = act.value->getWidth();
   arm_compute::TensorShape shape(channels);
-
+  std::cout << "running softmax act...." << std::endl;
   // Initialize ACL.
   new_tensor(input(), shape, act.value->getData());
   new_tensor(output(), shape, act.value->getData());
@@ -267,6 +267,7 @@ Error __must_check forward(Argument& act) {
   arm_compute::TensorShape input_shape(count);
   arm_compute::TensorShape output_shape(count);
 
+  std::cout << "running relu forward..." << std::endl;
   // Initialize ACL.
   arm_compute::ActivationLayerInfo act_info(arm_compute::ActivationLayerInfo::ActivationFunction::RELU);
 

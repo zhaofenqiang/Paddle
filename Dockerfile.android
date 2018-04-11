@@ -1,3 +1,4 @@
+# use ubuntu 16.04 source
 FROM ubuntu:16.04
 MAINTAINER PaddlePaddle Authors <paddle-dev@baidu.com>
 
@@ -8,7 +9,7 @@ RUN /bin/bash -c 'if [[ -n ${UBUNTU_MIRROR} ]]; then sed -i 's#http://archive.ub
 ARG ANDROID_ABI
 ARG ANDROID_API
 
-ENV ANDROID_ABI=${ANDROID_ABI:-"armeabi-v7a"}
+ENV ANDROID_ABI=${ANDROID_ABI:-"arm64-v8a"}
 ENV ANDROID_API=${ANDROID_API:-21}
 
 ENV HOME=/root \

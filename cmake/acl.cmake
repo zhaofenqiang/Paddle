@@ -1,2 +1,4 @@
+#include_directories("ComputeLibrary/include" "ComputeLibrary")
+
+# for linux
 include_directories("ComputeLibrary/include" "ComputeLibrary")
-link_directories("ComputeLibrary/lib")

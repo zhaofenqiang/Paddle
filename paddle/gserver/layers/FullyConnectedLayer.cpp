@@ -18,6 +18,7 @@ limitations under the License. */
 #include "paddle/math/SparseMatrix.h"
 #include "paddle/utils/Logging.h"
 #include "paddle/utils/Stat.h"
+#include <iostream>
 
 namespace paddle {
 
@@ -69,6 +70,7 @@ void FullyConnectedLayer::prefetch() {
 void FullyConnectedLayer::forward(PassType passType) {
   Layer::forward(passType);
 
+  std::cout << "running FullyConnectedLayer forward..." << std::endl;
   int batchSize = getInput(0).getBatchSize();
   /* malloc memory for the output_ if necessary */
   int size = getSize();
