@@ -24,7 +24,7 @@ For now(2018.04.11), it is based on paddle's develop branch at this [commit](htt
 
 ### Tutorial
 [Installation instructions](https://github.com/zhaofenqiang/PaddleOnACL/blob/develop/Installation.md)  
-[Inference benchmark demo]()  
+[Inference benchmark demo](https://github.com/zhaofenqiang/Mobile/blob/develop/benchmark/tool/C/README.md)  
 [Mobile AI Camera App Demo](https://github.com/zhaofenqiang/Mobile/tree/develop/Demo/Android/AICamera)
 
 
