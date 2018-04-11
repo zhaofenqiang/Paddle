@@ -1,7 +1,7 @@
 # Build PaddleOnACL's CAPI library  
 For now, it has been built successfully on these two platforms
 -  [Build for Raspberry Pi](https://github.com/zhaofenqiang/PaddleOnACL/blob/develop/Installation.md#build-for-raspberry-pi)
--  [Build for android]()
+-  [Build for android](https://github.com/zhaofenqiang/PaddleOnACL/blob/develop/Installation.md#build-for-android)
 
 # Build for Raspberry Pi
 A [Ubuntu Mate](https://ubuntu-mate.org/download/) OS for Raspberry Pi is recommended. And [Etcher](https://etcher.io/) is recommended to burn the OS into SD cards. 
