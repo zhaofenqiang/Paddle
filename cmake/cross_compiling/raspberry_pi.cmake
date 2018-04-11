@@ -43,15 +43,19 @@ IF(NOT DEFINED RPI_ARM_NEON)
     SET(RPI_ARM_NEON ON)
 ENDIF()
 
-IF(RPI_TOOLCHAIN)
-    SET(RPI_TOOLCHAIN_ROOT ${RPI_TOOLCHAIN})
-    IF(RPI_TOOLCHAIN_ROOT MATCHES "gcc-linaro-arm-linux-gnueabihf-raspbian(-x64)?$")
+# IF(RPI_TOOLCHAIN)
+#   SET(RPI_TOOLCHAIN_ROOT ${RPI_TOOLCHAIN})
+    #IF(RPI_TOOLCHAIN_ROOT MATCHES "gcc-linaro-arm-linux-gnueabihf-raspbian(-x64)?$")
         # gcc-linaro-arm-linux-gnueabihf-raspbian
         # gcc-linaro-arm-linux-gnueabihf-raspbian-x64
         SET(RPI_TOOLCHAIN_NAME arm-linux-gnueabihf)
-    ENDIF()
-    SET(RPI_TOOLCHAIN_PREFIX "${RPI_TOOLCHAIN_ROOT}/bin/${RPI_TOOLCHAIN_NAME}-")
-ENDIF()
+   # ENDIF()
+   # SET(RPI_TOOLCHAIN_PREFIX "${RPI_TOOLCHAIN_ROOT}/bin/${RPI_TOOLCHAIN_NAME}-")
+# ENDIF()
+
+
+message("RPI_TOOLCHAIN_PREFIX: ${RPI_TOOLCHAIN_PREFIX}")
+
 
 # C compiler
 IF(NOT CMAKE_C_COMPILER)
@@ -63,6 +67,10 @@ IF(NOT EXISTS ${RPI_C_COMPILER})
     MESSAGE(FATAL_ERROR "Cannot find C compiler: ${RPI_C_COMPILER}")
 ENDIF()
 
+message("RPI_C_COMPILER: ${RPI_C_COMPILER}")
+SET(RPI_C_COMPILER "arm-linux-gnueabihf-gcc")
+message("after RPI_C_COMPILER: ${RPI_C_COMPILER}")
+
 # CXX compiler
 IF(NOT CMAKE_CXX_COMPILER)
     SET(RPI_CXX_COMPILER "${RPI_TOOLCHAIN_PREFIX}g++")
@@ -73,11 +81,15 @@ IF(NOT EXISTS ${RPI_CXX_COMPILER})
     MESSAGE(FATAL_ERROR "Cannot find CXX compiler: ${RPI_CXX_COMPILER}")
 ENDIF()
 
+message("RPI_CXX_COMPILER: ${RPI_CXX_COMPILER}")
+SET(RPI_CXX_COMPILER "arm-linux-gnueabihf-g++")
+message("after RPI_CXX_COMPILER: ${RPI_CXX_COMPILER}")
+
 SET(CMAKE_C_COMPILER ${RPI_C_COMPILER} CACHE PATH "C compiler" FORCE)
 SET(CMAKE_CXX_COMPILER ${RPI_CXX_COMPILER} CACHE PATH "CXX compiler" FORCE)
 
 IF(RPI_ARM_NEON)
-    SET(RPI_C_FLAGS "${RPI_C_FLAGS} -mfpu=neon")
+    SET(RPI_C_FLAGS "${RPI_C_FLAGS} -std=c++11 -mfpu=neon")
 ENDIF()
 
 SET(CMAKE_C_FLAGS "${RPI_C_FLAGS} ${CMAKE_C_FLAGS}" CACHE STRING "C flags")

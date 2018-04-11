@@ -18,6 +18,10 @@ ENDIF(USE_EIGEN_FOR_BLAS)
 
 INCLUDE(cblas)
 
+# solve this problem https://github.com/PaddlePaddle/Paddle/issues/9291#issuecomment-380347637
+message("CBLAS_FOUND: ${CBLAS_FOUND}")
+set(CBLAS_FOUND OFF)
+
 IF(NOT ${CBLAS_FOUND})
     INCLUDE(ExternalProject)
 

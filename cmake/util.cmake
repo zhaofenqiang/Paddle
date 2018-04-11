@@ -119,7 +119,7 @@ function(link_paddle_exe TARGET_NAME)
       target_link_libraries(${TARGET_NAME} "-L${MKLML_LIB_DIR} -liomp5 -Wl,--as-needed")
     endif()
     
-    target_link_libraries(${TARGET_NAME} libarm_compute.so libarm_compute_core.so)
+    target_link_libraries(${TARGET_NAME}  libarm_compute_core.so libarm_compute.so)
     add_dependencies(${TARGET_NAME} ${external_project_dependencies})
 endfunction()
 
