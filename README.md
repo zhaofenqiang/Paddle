@@ -12,9 +12,10 @@ For now(2018.04.11), it is based on paddle's develop branch at this [commit](htt
 
 
 ### Pending work:
-- [ ] Weekly merge from paddle develop branch  
+- [ ] Merge from latest paddle develop branch 
 - [ ] Port BatchNormlization layer  
 - [ ] Port Sigmoid Layer
 - [ ] Port TanH Layer
 - [ ] Define Bypass variable to enable and disable ACL layer
 - [ ] Add standard and optimized log info
+- [ ] Add macro definition to switch between neon/opencl and gemmConv/directConv
