@@ -6,11 +6,15 @@ PaddleOnACL is a work during my arm intern. It aims at porting [paddle](https://
 
 For now(2018.04.11), it is based on paddle's develop branch at this [commit](https://github.com/zhaofenqiang/PaddleOnACL/commit/128adf53cb4517f2a4f123044c1ffffd6a3fa74d) and arm ComputeLibrary [v18.03](https://github.com/ARM-software/ComputeLibrary/tree/v18.03).
 
+### Tutorial
+[Installation instructions](https://github.com/zhaofenqiang/PaddleOnACL/blob/develop/Installation.md)  
+[Inference benchmark demo](https://github.com/zhaofenqiang/Mobile/blob/develop/benchmark/tool/C/README.md)  
+[Mobile AI Camera App Demo](https://github.com/zhaofenqiang/Mobile/tree/develop/Demo/Android/AICamera)
+
 ### Konwn issues:
 - Crash when running conv13 of MobileNet, [#1](https://github.com/zhaofenqiang/PaddleOnACL/issues/1)
 - With only activation and softmax layer enabled, crashed at 2nd iteration [#2](https://github.com/zhaofenqiang/PaddleOnACL/issues/2)
 - Crash when running conv2_1 of vgg_ssd_net, [#3](https://github.com/zhaofenqiang/PaddleOnACL/issues/3)
-
 
 
 ### Pending work:
@@ -21,11 +25,6 @@ For now(2018.04.11), it is based on paddle's develop branch at this [commit](htt
 - [ ] Define Bypass variable to enable and disable ACL layer
 - [ ] Add standard and optimized log info
 - [ ] Add macro definition to switch between neon/opencl and gemmConv/directConv
-
-### Tutorial
-[Installation instructions](https://github.com/zhaofenqiang/PaddleOnACL/blob/develop/Installation.md)  
-[Inference benchmark demo](https://github.com/zhaofenqiang/Mobile/blob/develop/benchmark/tool/C/README.md)  
-[Mobile AI Camera App Demo](https://github.com/zhaofenqiang/Mobile/tree/develop/Demo/Android/AICamera)
 
 
 Benchmark
